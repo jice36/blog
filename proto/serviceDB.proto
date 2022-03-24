@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package bd;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/myProjects/blog/proto";
+
+service ServiceDB {
+  rpc GetNotes(RequestGet) returns (ResponseGet) {}
+  rpc SendNote(RequestSend) returns (ResponseSend) {}
+}
+
+message RequestGet {
+  string Id = 1; // userID
+}
+
+message RequestSend {
+  string Id = 1;
+  Note note = 2;
+}
+
+message Note {
+  string header = 1;
+  string text = 2;
+  repeated string tags = 3;
+  google.protobuf.Timestamp TimeCreate = 4;
+}
+
+message ResponseSend{}
+
+message ResponseGet {
+  repeated Note notes = 1;
+}
+

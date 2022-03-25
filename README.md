@@ -2,14 +2,14 @@
 порт сервиса с базой данных 5300
 db - 5434 <br/>
 blog-8181
- сборка проекта 
-  make
-  ./main
-  ./db
+ сборка проекта <br/>
+  make<br/>
+  ./main<br/>
+  ./db<br/>
   
- сборка docker 
- docker build -t blog-db ./
- docker run -d --name blog-db-container -p 5434:5432 blog-db
+ сборка docker <br/>
+ docker build -t blog-db ./<br/>
+ docker run -d --name blog-db-container -p 5434:5432 blog-db <br/>
 
 в users уже добавленны пользователи 
 b03d13da-ab8a-11ec-90e5-acde48001122

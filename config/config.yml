@@ -3,6 +3,8 @@ server:
   port: 8181
 
 database:
+  dbhost: "127.0.0.1"
+  dbport: "5434"
   dbname: "blog"
   dbuser: "postgres"
   dbpassword: "1234"

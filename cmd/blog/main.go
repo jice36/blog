@@ -13,7 +13,7 @@ var (
 )
 
 func init() {
-	flag.StringVar(&configPath, "config", "config/config.yml", "path to config file") //todo пароль поправить в конфиге
+	flag.StringVar(&configPath, "config", "config/config.yml", "path to config file")
 }
 
 func main() {

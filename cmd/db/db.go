@@ -6,15 +6,14 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/lib/pq"
 	"log"
 	"net"
-	"time"
 
 	c "github.com/jice36/blog/internal/server"
 	pb "github.com/jice36/blog/proto"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/grpclog"
@@ -31,7 +30,7 @@ var (
 )
 
 func init() {
-	flag.StringVar(&configPath, "config", "config/config.yml", "path to config file") //todo пароль поправить в конфиге
+	flag.StringVar(&configPath, "config", "config/config.yml", "path to config file")
 }
 
 func main() {
@@ -42,7 +41,8 @@ func main() {
 		log.Fatal(cErr)
 	}
 
-	connStr := "user=" + config.Database.Dbuser + " password=" + config.Database.Dbpassword + " dbname=" + config.Database.Dbname + " sslmode=disable"
+	connStr := "host=" + config.Database.Dbhost + " port=" + config.Database.Dbport + " user=" + config.Database.Dbuser +
+		" password=" + config.Database.Dbpassword + " dbname=" + config.Database.Dbname + " sslmode=disable"
 	fmt.Println(connStr)
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
@@ -66,12 +66,24 @@ func main() {
 }
 
 func (s *server) GetNotes(ctx context.Context, r *pb.RequestGet) (*pb.ResponseGet, error) {
+	ctxLocal, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	if r.Id == "" {
-		return nil, errors.New("")
+		return nil, errors.New("id не передан")
 	}
+	notesResp, err := s.getNotes(ctxLocal, r)
+	if err != nil {
+		return nil, err
+	}
+
+	return notesResp, nil
+}
+
+func (s *server) getNotes(ctx context.Context, r *pb.RequestGet) (*pb.ResponseGet, error) {
 	q := `select header, text, tags, time_create from notes where id_user = $1`
 
-	rows, err := s.DB.Query(q, r.Id) // проверить на пользователя
+	rows, err := s.DB.Query(q, r.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -108,10 +120,23 @@ func (s *server) GetNotes(ctx context.Context, r *pb.RequestGet) (*pb.ResponseGe
 	notesResp := &pb.ResponseGet{
 		Notes: notes,
 	}
+
 	return notesResp, nil
 }
 
 func (s *server) SendNote(ctx context.Context, r *pb.RequestSend) (*pb.ResponseSend, error) {
+	ctxLocal, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	sendResp, err := s.sendNotes(ctxLocal, r)
+	if err != nil {
+		return nil, err
+	}
+
+	return sendResp, nil
+}
+
+func (s *server) sendNotes(ctx context.Context, r *pb.RequestSend) (*pb.ResponseSend, error) {
 	tx, err := s.DB.Begin()
 	if err != nil {
 		return nil, err
@@ -124,7 +149,7 @@ func (s *server) SendNote(ctx context.Context, r *pb.RequestSend) (*pb.ResponseS
 		return nil, err
 	}
 
-	param := []interface{}{idNote, r.Note.Header, r.Note.Text, pq.Array(r.Note.Tags), time.Now(), r.Id}
+	param := []interface{}{idNote, r.Note.Header, r.Note.Text, pq.Array(r.Note.Tags), r.Note.TimeCreate.AsTime(), r.Id}
 
 	_, err = tx.Exec(q, param...)
 	if err != nil {
@@ -132,6 +157,7 @@ func (s *server) SendNote(ctx context.Context, r *pb.RequestSend) (*pb.ResponseS
 		return nil, err
 	}
 	tx.Commit()
-	a := &pb.ResponseSend{}
-	return a, nil
+
+	res := &pb.ResponseSend{Done: true}
+	return res, nil
 }

@@ -1,4 +1,5 @@
 package server
+
 import (
 	"flag"
 	"fmt"
@@ -15,11 +16,14 @@ type ConfigBlog struct {
 }
 type ConfigDB struct {
 	Database struct {
+		Dbhost     string `yaml:"dbhost"`
+		Dbport     string `yaml:"dbport"`
 		Dbname     string `yaml:"dbname"`
 		Dbuser     string `yaml:"dbuser"`
 		Dbpassword string `yaml:"dbpassword"`
 	} `yaml:"database"`
 }
+
 func NewConfigBlog(configPath string) (*ConfigBlog, error) {
 	config := &ConfigBlog{}
 

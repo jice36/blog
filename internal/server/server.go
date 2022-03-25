@@ -45,8 +45,8 @@ func (s *Server) getNote(w http.ResponseWriter, r *http.Request) {
 
 	id, ok := param["id"]
 	fmt.Println(id)
-	if !ok {
-		http.Error(w, "id пользователя не передан", http.StatusNotFound) //todo добавить ошибку и проверить длину id
+	if !ok && len(id) != 34{
+		http.Error(w, "id пользователя не передан", http.StatusNotFound)
 	}
 
 	resp, err := s.service.GetNotes(id)
@@ -77,7 +77,7 @@ func (s *Server) sendNote(w http.ResponseWriter, r *http.Request) {
 
 	_, err = s.service.SendNote(data)
 	if err != nil {
-			http.Error(w,err.Error(),  http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
 	w.Header().Set("Content-Type", "application/json")

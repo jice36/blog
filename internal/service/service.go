@@ -2,14 +2,13 @@ package service
 
 import (
 	"context"
-	"fmt"
-	"google.golang.org/grpc/credentials/insecure"
 	"time"
 
 	"github.com/jice36/blog/models"
 	pb "github.com/jice36/blog/proto"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -25,8 +24,6 @@ func NewService() *ServiceDB {
 	if err != nil {
 		grpclog.Fatalf("fail to dial: %v", err)
 	}
-
-//	defer conn.Close()
 
 	cli := pb.NewServiceDBClient(conn)
 
@@ -58,7 +55,7 @@ func (s *ServiceDB) SendNote(r *models.SendNoteReq) (*pb.ResponseSend, error) {
 		Header:     r.Header,
 		Text:       r.Text,
 		Tags:       r.Tags,
-		TimeCreate: timestamppb.New(time.Now()),
+		TimeCreate: timestamppb.New(time.Now().UTC()),
 	}
 
 	rs := &pb.RequestSend{
@@ -67,9 +64,8 @@ func (s *ServiceDB) SendNote(r *models.SendNoteReq) (*pb.ResponseSend, error) {
 	}
 
 	resp, err := s.client.SendNote(ctx, rs)
-	if err != nil {
+	if err != nil && !resp.Done {
 		return nil, err
 	}
-	fmt.Println(resp)
 	return resp, nil
 }
